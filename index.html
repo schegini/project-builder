@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Build Your Own Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0b0d;
+    --bg-elev: #131316;
+    --bg-card: rgba(255, 255, 255, 0.025);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.18);
+    --ink: #ede8dc;
+    --ink-dim: #8a8a85;
+    --ink-faint: #555550;
+    --accent: #d4ff3a;
+    --accent-dim: #889c2a;
+    --warn: #ff6b4a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.55;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Background atmosphere */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 800px 500px at 15% 10%, rgba(212, 255, 58, 0.05), transparent 60%),
+      radial-gradient(ellipse 600px 400px at 90% 90%, rgba(255, 107, 74, 0.04), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+
+  /* Header */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 56px;
+  }
+
+  .brand {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .brand-dot {
+    width: 10px;
+    height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 16px var(--accent);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.55; transform: scale(0.85); }
+  }
+
+  .meta {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--ink-dim);
+  }
+
+  /* Progress indicator */
+  .progress {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 48px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .progress-step {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-faint);
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .progress-step.active {
+    color: var(--bg);
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .progress-step.completed {
+    color: var(--accent);
+    border-color: var(--accent-dim);
+  }
+
+  /* Screens */
+  .screen { display: none; animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+  .screen.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Step labeling */
+  .step-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--accent);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .step-label::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .step-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(38px, 6vw, 64px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    margin-bottom: 18px;
+  }
+
+  .step-title em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 400;
+  }
+
+  .step-sub {
+    font-size: 14px;
+    color: var(--ink-dim);
+    max-width: 580px;
+    margin-bottom: 48px;
+  }
+
+  /* Hero screen */
+  .hero-marquee {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 13px;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+    margin-bottom: 28px;
+  }
+
+  .start-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 18px 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    margin-top: 32px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .start-btn::after {
+    content: '→';
+    margin-left: 16px;
+    display: inline-block;
+    transition: transform 0.3s ease;
+  }
+
+  .start-btn:hover {
+    background: var(--ink);
+  }
+
+  .start-btn:hover::after { transform: translateX(6px); }
+
+  .preview-list {
+    margin-top: 56px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 24px;
+  }
+
+  .preview-item {
+    font-size: 12px;
+    color: var(--ink-dim);
+  }
+
+  .preview-item strong {
+    display: block;
+    color: var(--ink);
+    font-weight: 500;
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    font-style: italic;
+    margin-bottom: 6px;
+  }
+
+  /* Option grid */
+  .options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .option {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 28px 24px;
+    cursor: pointer;
+    text-align: left;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: inherit;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .option::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0;
+    width: 2px;
+    height: 100%;
+    background: var(--accent);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .option:hover {
+    background: rgba(212, 255, 58, 0.04);
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+  }
+
+  .option:hover::before { transform: scaleY(1); }
+
+  .option-num {
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.2em;
+    margin-bottom: 14px;
+  }
+
+  .option-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 22px;
+    letter-spacing: -0.015em;
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+
+  .option-desc {
+    font-size: 12px;
+    color: var(--ink-dim);
+    line-height: 1.5;
+  }
+
+  /* Difficulty options - distinct layout */
+  .difficulty-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .difficulty-grid .option { text-align: center; padding: 40px 24px; }
+
+  .difficulty-bars {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 18px;
+  }
+
+  .difficulty-bars span {
+    width: 24px;
+    height: 4px;
+    background: var(--ink-faint);
+    transition: background 0.3s ease;
+  }
+
+  .difficulty-bars span.on { background: var(--accent); }
+
+  .difficulty-grid .option:hover .difficulty-bars span.on {
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+
+  /* Yes/No */
+  .binary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    max-width: 640px;
+  }
+
+  .binary-grid .option {
+    padding: 48px 32px;
+    text-align: center;
+  }
+
+  /* Back button */
+  .back-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .back-btn {
+    background: transparent;
+    border: none;
+    color: var(--ink-dim);
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 8px 0;
+    transition: color 0.25s ease;
+  }
+
+  .back-btn::before { content: '← '; }
+  .back-btn:hover { color: var(--accent); }
+
+  .breadcrumb {
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+    text-align: right;
+  }
+
+  .breadcrumb span { color: var(--ink-dim); }
+  .breadcrumb .sep { margin: 0 8px; color: var(--ink-faint); }
+
+  /* === Summary screen === */
+  .summary-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 40px;
+  }
+
+  .summary-eyebrow {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .summary-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: clamp(36px, 5vw, 56px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+
+  .summary-tags {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+
+  .tag {
+    font-size: 11px;
+    padding: 6px 12px;
+    border: 1px solid var(--border-strong);
+    color: var(--ink-dim);
+    letter-spacing: 0.08em;
+  }
+
+  .tag.accent { color: var(--accent); border-color: var(--accent-dim); }
+
+  .section {
+    margin-bottom: 56px;
+  }
+
+  .section-num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+
+  .section-heading {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 30px;
+    letter-spacing: -0.015em;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section p {
+    margin-bottom: 16px;
+    color: var(--ink);
+    max-width: 720px;
+  }
+
+  .section p.dim { color: var(--ink-dim); font-size: 14px; }
+
+  .steps-list {
+    list-style: none;
+    counter-reset: step;
+  }
+
+  .steps-list li {
+    counter-increment: step;
+    padding: 20px 0 20px 60px;
+    border-bottom: 1px dashed var(--border);
+    position: relative;
+  }
+
+  .steps-list li:last-child { border-bottom: none; }
+
+  .steps-list li::before {
+    content: counter(step, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 22px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 24px;
+    color: var(--accent);
+    font-weight: 400;
+  }
+
+  .step-name {
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+
+  .step-text {
+    font-size: 13px;
+    color: var(--ink-dim);
+    line-height: 1.6;
+  }
+
+  /* Paper cards */
+  .papers {
+    display: grid;
+    gap: 14px;
+  }
+
+  .paper {
+    border: 1px solid var(--border);
+    padding: 22px 24px;
+    text-decoration: none;
+    color: var(--ink);
+    display: block;
+    transition: all 0.3s ease;
+    background: var(--bg-card);
+    position: relative;
+  }
+
+  .paper::after {
+    content: '↗';
+    position: absolute;
+    right: 24px;
+    top: 22px;
+    color: var(--ink-faint);
+    font-size: 18px;
+    transition: all 0.3s ease;
+  }
+
+  .paper:hover {
+    border-color: var(--accent-dim);
+    background: rgba(212, 255, 58, 0.03);
+  }
+
+  .paper:hover::after {
+    color: var(--accent);
+    transform: translate(2px, -2px);
+  }
+
+  .paper-meta {
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .paper-title {
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    font-weight: 400;
+    line-height: 1.3;
+    margin-bottom: 6px;
+    padding-right: 30px;
+  }
+
+  .paper-authors {
+    font-size: 12px;
+    color: var(--ink-dim);
+  }
+
+  /* Completion checklist */
+  .checklist {
+    list-style: none;
+  }
+
+  .checklist li {
+    padding: 14px 0 14px 36px;
+    position: relative;
+    color: var(--ink);
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .checklist li:last-child { border-bottom: none; }
+
+  .checklist li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 18px;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--border-strong);
+    background: transparent;
+  }
+
+  .checklist li::after {
+    content: '✓';
+    position: absolute;
+    left: 2px;
+    top: 13px;
+    color: var(--accent);
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .checklist li:hover::after { opacity: 1; }
+
+  .restart {
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .restart button {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--border-strong);
+    padding: 16px 28px;
+    font-family: inherit;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .restart button:hover {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  .restart button.primary {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  .restart button.primary:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+
+  /* No-papers section override */
+  .no-papers-note {
+    border-left: 2px solid var(--ink-faint);
+    padding: 16px 20px;
+    color: var(--ink-dim);
+    font-style: italic;
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+  }
+
+  /* === Build Your Own card === */
+  .byo-wrap {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .byo-card {
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    padding: 24px 28px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: inherit;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .byo-card:hover {
+    border-color: var(--accent);
+    background: rgba(212, 255, 58, 0.03);
+  }
+
+  .byo-card-text { flex: 1; }
+
+  .byo-card-arrow {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 28px;
+    color: var(--ink-faint);
+    transition: all 0.3s ease;
+  }
+
+  .byo-card:hover .byo-card-arrow {
+    color: var(--accent);
+    transform: translateX(6px);
+  }
+
+  /* === Custom path: prompts + inputs === */
+  .prompts {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 36px;
+  }
+
+  .prompt {
+    border-left: 2px solid var(--accent-dim);
+    padding: 8px 0 8px 18px;
+  }
+
+  .prompt-q {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 17px;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .prompt-hint {
+    font-size: 12px;
+    color: var(--ink-dim);
+    line-height: 1.55;
+  }
+
+  .input-block { margin-bottom: 24px; }
+
+  .input-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--ink-dim);
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .text-input {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-strong);
+    padding: 16px 18px;
+    color: var(--ink);
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    outline: none;
+    transition: all 0.25s ease;
+  }
+
+  .text-input::placeholder {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+
+  .text-input:focus {
+    border-color: var(--accent);
+    background: rgba(212, 255, 58, 0.025);
+  }
+
+  .text-area {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 14px 18px;
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    outline: none;
+    transition: all 0.25s ease;
+    resize: vertical;
+    min-height: 90px;
+  }
+
+  .text-area::placeholder {
+    color: var(--ink-faint);
+  }
+
+  .text-area:focus {
+    border-color: var(--accent);
+    background: rgba(212, 255, 58, 0.025);
+  }
+
+  .continue-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 16px 28px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 8px;
+  }
+
+  .continue-btn::after {
+    content: '→';
+    margin-left: 14px;
+    display: inline-block;
+    transition: transform 0.3s ease;
+  }
+
+  .continue-btn:hover { background: var(--ink); }
+  .continue-btn:hover::after { transform: translateX(6px); }
+
+  .continue-btn:disabled {
+    background: var(--ink-faint);
+    color: var(--bg);
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .continue-btn:disabled::after { transform: none; }
+
+  .input-error {
+    color: var(--warn);
+    font-size: 11px;
+    margin-top: 8px;
+    letter-spacing: 0.05em;
+    min-height: 16px;
+  }
+
+  /* Find-papers guidance block */
+  .guide-block {
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    padding: 24px 26px;
+    margin-bottom: 14px;
+  }
+
+  .guide-block h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: var(--ink);
+  }
+
+  .guide-block p {
+    font-size: 13px;
+    color: var(--ink-dim);
+    line-height: 1.65;
+    margin-bottom: 8px;
+  }
+
+  .guide-block code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: rgba(212, 255, 58, 0.08);
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  .guide-block a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--accent-dim);
+    transition: opacity 0.2s ease;
+  }
+
+  .guide-block a:hover { opacity: 0.75; }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .container { padding: 24px 20px 60px; }
+    .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .difficulty-grid { grid-template-columns: 1fr; }
+    .binary-grid { grid-template-columns: 1fr; }
+    .back-row { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .breadcrumb { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span>Project<em style="font-style: italic; color: var(--ink-dim);">·</em>Builder</span>
+    </div>
+    <div class="meta">v1.0</div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress" id="progress">
+    <div class="progress-step" data-step="0">00 / Start</div>
+    <div class="progress-step" data-step="1">01 / Topic</div>
+    <div class="progress-step" data-step="2">02 / Sub-area</div>
+    <div class="progress-step" data-step="3">03 / Difficulty</div>
+    <div class="progress-step" data-step="4">04 / Research</div>
+    <div class="progress-step" data-step="5">05 / Brief</div>
+  </div>
+
+  <!-- ============ SCREEN 0: HERO ============ -->
+  <div class="screen active" id="screen-0">
+    <div class="hero-marquee">— a decision tree for choosing what to build next —</div>
+    <h1 class="step-title">
+      Streamline the Idea-To-Output pipeline.<br />
+    </h1>
+    <p class="step-sub" style="margin-bottom: 0;">
+      Too many students want to build a project yet struggle to turn ideas into reality. Here is a guided pathway from blank-page paralysis to a real, finishable project. Pick a field, narrow a focus, set a scope, and walk away with a brief. Plus, foundational papers if you want them.
+    </p>
+    <button class="start-btn" onclick="next()">Begin building</button>
+
+    <div class="preview-list">
+      <div class="preview-item"><strong>Five fields</strong>From applied math to engineering.</div>
+      <div class="preview-item"><strong>Twenty-five focuses</strong>Specific sub-areas you can actually scope.</div>
+      <div class="preview-item"><strong>Foundational papers</strong>Optional reading attached to your path.</div>
+      <div class="preview-item"><strong>An objective finish line</strong>Clear, non-arbitrary signals for when you're done.</div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 1: TOPIC ============ -->
+  <div class="screen" id="screen-1">
+    <div class="step-label">Step 01</div>
+    <h2 class="step-title">Which field draws you in?</h2>
+    <p class="step-sub">Pick the discipline that genuinely makes you curious. The best projects come from real interest.</p>
+
+    <div class="options" id="topic-options"></div>
+
+    <div class="byo-wrap">
+      <button class="byo-card" onclick="startCustom()">
+        <div class="byo-card-text">
+          <div class="option-num" style="margin-bottom: 8px;">— OR —</div>
+          <div class="option-title" style="margin-bottom: 4px;">None of these fit. Build your own.</div>
+          <div class="option-desc">A guided path for fields outside the five above. We'll help you name it, narrow it, and scope it.</div>
+        </div>
+        <div class="byo-card-arrow">→</div>
+      </button>
+    </div>
+
+    <div class="back-row">
+      <button class="back-btn" onclick="back()">Back</button>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 1C: CUSTOM FIELD DISCOVERY ============ -->
+  <div class="screen" id="screen-1c">
+    <div class="step-label">Step 01 / Custom path</div>
+    <h2 class="step-title">Name your <em>field</em>.</h2>
+    <p class="step-sub">A "field" is a recognized area of study or practice with its own vocabulary, journals, and conferences. If you can't name yours yet, work through these prompts.</p>
+
+    <div class="prompts">
+      <div class="prompt">
+        <div class="prompt-q">What problems do you find yourself thinking about when no one's assigning them?</div>
+        <div class="prompt-hint">The questions that follow you around in the shower or on walks. These tend to point toward fields, not just topics.</div>
+      </div>
+      <div class="prompt">
+        <div class="prompt-q">Which classes, books, or YouTube channels held your attention longest?</div>
+        <div class="prompt-hint">If you can't stop watching it, you've probably found a field. Check the description — is it called economics, philosophy of mind, urban planning, music theory? That label is your field.</div>
+      </div>
+      <div class="prompt">
+        <div class="prompt-q">Whose work do you wish you could do?</div>
+        <div class="prompt-hint">Look up someone you admire. Their academic department, job title, or self-description is probably a field name. Steal it.</div>
+      </div>
+      <div class="prompt">
+        <div class="prompt-q">Sanity check: does this field have a Wikipedia page, a university department somewhere, or recurring conferences?</div>
+        <div class="prompt-hint">If yes, you have a real field. If no, what you have is a topic — narrow it differently or pick the parent discipline.</div>
+      </div>
+    </div>
+
+    <div class="input-block">
+      <label class="input-label" for="custom-field-input">Your field</label>
+      <input type="text" class="text-input" id="custom-field-input" placeholder="e.g. Cognitive Science, Urban Planning, Music Theory…" oninput="validateCustomField()" />
+      <div class="input-error" id="field-error"></div>
+    </div>
+
+    <div class="input-block">
+      <label class="input-label" for="custom-field-why">Why this field? <span style="text-transform: none; letter-spacing: 0.02em; color: var(--ink-faint);">(optional, helps shape your brief)</span></label>
+      <textarea class="text-area" id="custom-field-why" placeholder="A sentence or two on what about this field pulled you in…"></textarea>
+    </div>
+
+    <button class="continue-btn" id="custom-field-continue" onclick="submitCustomField()" disabled>Continue</button>
+
+    <div class="back-row">
+      <button class="back-btn" onclick="back()">Back</button>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 2: SUB-AREA ============ -->
+  <div class="screen" id="screen-2">
+    <div class="step-label">Step 02</div>
+    <h2 class="step-title">Narrow the <em>focus</em>.</h2>
+    <p class="step-sub" id="subarea-sub">Within your chosen field, where does your attention lie?</p>
+
+    <div class="options" id="subarea-options"></div>
+
+    <div class="back-row">
+      <button class="back-btn" onclick="back()">Back</button>
+      <div class="breadcrumb" id="bc-2"></div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 2C: CUSTOM SUB-AREA NARROWING ============ -->
+  <div class="screen" id="screen-2c">
+    <div class="step-label">Step 02 / Custom path</div>
+    <h2 class="step-title">Narrow it to a <em>focus</em>.</h2>
+    <p class="step-sub" id="custom-subarea-sub">Inside your field, find one specific corner. A whole field is a career; a sub-area is a project.</p>
+
+    <div class="prompts">
+      <div class="prompt">
+        <div class="prompt-q">Open the Wikipedia page for your field and scroll to "subdisciplines" or "branches."</div>
+        <div class="prompt-hint">This is the fastest way to see the standard sub-area names. Pick one that genuinely interests you, not one that sounds impressive.</div>
+      </div>
+      <div class="prompt">
+        <div class="prompt-q">Find a university course catalog in your field and skim the upper-division class titles.</div>
+        <div class="prompt-hint">Each class title is a sub-area. Stanford, MIT, and Berkeley have public catalogs. The class names are pre-vetted by people who teach this stuff.</div>
+      </div>
+      <div class="prompt">
+        <div class="prompt-q">Check the section names of a major conference or journal in your field.</div>
+        <div class="prompt-hint">Conferences are organized by sub-area for a reason — those are the live, active corners where people are actually building things.</div>
+      </div>
+      <div class="prompt">
+        <div class="prompt-q">Stress-test: can you imagine spending 3+ weeks on this sub-area without getting bored?</div>
+        <div class="prompt-hint">If not, narrow further, broaden slightly, or pick a different sub-area. Honest answers here save you weeks later.</div>
+      </div>
+    </div>
+
+    <div class="input-block">
+      <label class="input-label" for="custom-subarea-input">Your sub-area</label>
+      <input type="text" class="text-input" id="custom-subarea-input" placeholder="e.g. Embodied cognition, Transit-oriented design, Counterpoint…" oninput="validateCustomSubarea()" />
+      <div class="input-error" id="subarea-error"></div>
+    </div>
+
+    <div class="input-block">
+      <label class="input-label" for="custom-subarea-desc">In one sentence, what does this sub-area study? <span style="text-transform: none; letter-spacing: 0.02em; color: var(--ink-faint);">(optional)</span></label>
+      <textarea class="text-area" id="custom-subarea-desc" placeholder="If you can't write this sentence yet, you're not ready to scope a project here — finish researching first."></textarea>
+    </div>
+
+    <button class="continue-btn" id="custom-subarea-continue" onclick="submitCustomSubarea()" disabled>Continue</button>
+
+    <div class="back-row">
+      <button class="back-btn" onclick="back()">Back</button>
+      <div class="breadcrumb" id="bc-2c"></div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 3: DIFFICULTY ============ -->
+  <div class="screen" id="screen-3">
+    <div class="step-label">Step 03</div>
+    <h2 class="step-title">How <em>far</em> do you want to push it?</h2>
+    <p class="step-sub">Be honest about your time and current skill. Easy projects finished beat ambitious ones abandoned.</p>
+
+    <div class="difficulty-grid">
+      <button class="option" onclick="selectDifficulty('easy')">
+        <div class="difficulty-bars"><span class="on"></span><span></span><span></span></div>
+        <div class="option-title">Easy</div>
+        <div class="option-desc">1–2 weeks. Clear scope. Existing tutorials available.</div>
+      </button>
+      <button class="option" onclick="selectDifficulty('medium')">
+        <div class="difficulty-bars"><span class="on"></span><span class="on"></span><span></span></div>
+        <div class="option-title">Medium</div>
+        <div class="option-desc">3–6 weeks. Real design choices. Some unknowns.</div>
+      </button>
+      <button class="option" onclick="selectDifficulty('hard')">
+        <div class="difficulty-bars"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+        <div class="option-title">Hard</div>
+        <div class="option-desc">2+ months. Genuine research rigor.</div>
+      </button>
+    </div>
+
+    <div class="back-row">
+      <button class="back-btn" onclick="back()">Back</button>
+      <div class="breadcrumb" id="bc-3"></div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 4: RESEARCH PAPERS ============ -->
+  <div class="screen" id="screen-4">
+    <div class="step-label">Step 04</div>
+    <h2 class="step-title">Add <em>research papers</em> to your path?</h2>
+    <p class="step-sub">Foundational papers can sharpen your project, but only if you have time to read them properly. They're optional, not required.</p>
+
+    <div class="binary-grid">
+      <button class="option" onclick="selectPapers(true)">
+        <div class="option-num">YES</div>
+        <div class="option-title">Include papers</div>
+        <div class="option-desc">Give me three foundational reads tied to my focus area.</div>
+      </button>
+      <button class="option" onclick="selectPapers(false)">
+        <div class="option-num">NO</div>
+        <div class="option-title">Skip papers</div>
+        <div class="option-desc">Just give me the build plan, I'll read papers later if needed.</div>
+      </button>
+    </div>
+
+    <div class="back-row">
+      <button class="back-btn" onclick="back()">Back</button>
+      <div class="breadcrumb" id="bc-4"></div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 5: SUMMARY ============ -->
+  <div class="screen" id="screen-5">
+    <div class="summary-header">
+      <div class="summary-eyebrow">Your Project Brief</div>
+      <h2 class="summary-title" id="summary-title"></h2>
+      <p style="color: var(--ink-dim); font-size: 14px;" id="summary-tagline"></p>
+      <div class="summary-tags" id="summary-tags"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-num">i.</div>
+      <h3 class="section-heading">Overview</h3>
+      <p id="overview-text"></p>
+      <p class="dim" id="overview-context"></p>
+    </div>
+
+    <div class="section">
+      <div class="section-num">ii.</div>
+      <h3 class="section-heading">How to start</h3>
+      <ol class="steps-list" id="start-steps"></ol>
+    </div>
+
+    <div class="section" id="papers-section">
+      <div class="section-num">iii.</div>
+      <h3 class="section-heading" id="papers-heading">Foundational papers</h3>
+      <div class="papers" id="paper-list"></div>
+      <p class="dim" id="paper-list-note" style="margin-top: 24px;">Read in this order. The first paper sets the language and core problem; the next two push you toward how the field thinks today.</p>
+
+      <!-- Self-find guide shown only on custom path -->
+      <div id="find-papers-guide" style="display: none;">
+        <p style="margin-bottom: 20px;">Since you're on a build-your-own path, I can't hand you three pre-vetted papers. But finding your own is a skill worth learning — and the steps are the same regardless of field.</p>
+
+        <div class="guide-block">
+          <h4>1. Start with a survey</h4>
+          <p>Search Google Scholar or arXiv for <code>survey of <span class="js-subject-lower">your sub-area</span></code> or <code>review of <span class="js-subject-lower">your sub-area</span></code>. A good survey paper saves weeks: it names the canonical works, summarizes the open problems, and gives you a citation map of the entire sub-field. Read one survey before reading anything else.</p>
+        </div>
+
+        <div class="guide-block">
+          <h4>2. Find foundational papers via citation tracking</h4>
+          <p>Once you have a survey, open <a href="https://www.connectedpapers.com" target="_blank" rel="noopener">connectedpapers.com</a> or <a href="https://www.semanticscholar.org" target="_blank" rel="noopener">semanticscholar.org</a> and paste in its title. You'll see a visual citation graph. The most-cited papers in your <span class="js-subject">your sub-area</span> graph are usually the foundational ones — that's what "foundational" means in practice: everyone cites them.</p>
+        </div>
+
+        <div class="guide-block">
+          <h4>3. Search arXiv strategically</h4>
+          <p>Go to <a href="https://arxiv.org" target="_blank" rel="noopener">arxiv.org</a> and find the category matching your work. If your field isn't on arXiv, try <a href="https://scholar.google.com" target="_blank" rel="noopener">Google Scholar</a>, <a href="https://www.jstor.org" target="_blank" rel="noopener">JSTOR</a> (humanities, social science), <a href="https://pubmed.ncbi.nlm.nih.gov" target="_blank" rel="noopener">PubMed</a> (life sciences), or <a href="https://ssrn.com" target="_blank" rel="noopener">SSRN</a> (economics, finance, law). Search with "<span class="js-subject-lower">your sub-area</span>" plus a specific technical term. Sort by date for recent work; sort by citations for foundational work.</p>
+        </div>
+
+        <div class="guide-block">
+          <h4>4. Pick three and stop</h4>
+          <p>Pick three: one that defines the problem (often an older, highly-cited paper), one that introduces the dominant approach today, and one recent paper that represents the frontier. More than three is procrastination dressed up as research. Save the rest in a folder and read them if and when you need to.</p>
+        </div>
+
+        <div class="guide-block">
+          <h4>5. If you can't find papers, it's a signal</h4>
+          <p>If serious searching turns up nothing, two possibilities: either your sub-area has a different name than you think (try the prior-art audit again with synonyms), or you've stumbled into something genuinely under-explored. The first is much more common. The second is exciting — but verify the first before assuming the second.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="paper-tips-section">
+      <div class="section-num">iv.</div>
+      <h3 class="section-heading">Using papers without drowning</h3>
+      <ol class="steps-list">
+        <li>
+          <div class="step-name">Three-pass reading</div>
+          <div class="step-text">First pass: read abstract, intro, conclusion, and figure captions only — under 20 minutes. Second pass: read fully, look at the proofs and math but don't get bogged down. Third pass: only if it's directly relevant, reproduce a result or work the math yourself.</div>
+        </li>
+        <li>
+          <div class="step-name">Extract one idea per paper</div>
+          <div class="step-text">Remember that research papers are written by people who dedicate large amount of time and effort into understanding their field (at least hopefully). Don't try to absorb everything and don't feel bad if you're overwhelmed. Write down the single contribution that's most useful for your project — a method, a metric, a problem framing, a baseline you can compare against.</div>
+        </li>
+        <li>
+          <div class="step-name">Cite, don't copy</div>
+          <div class="step-text">When you borrow a method or framing, name the paper in your write-up. This signals you're building on real work, not reinventing wheels poorly.</div>
+        </li>
+        <li>
+          <div class="step-name">Use papers as scope-cutters</div>
+          <div class="step-text">If a paper solved the hard part of your problem twenty years ago, use their result and focus your effort on what's still open. Papers are essentially a license to skip work.</div>
+        </li>
+      </ol>
+    </div>
+
+    <div class="section">
+      <div class="section-num" id="done-num">v.</div>
+      <h3 class="section-heading">How to know you're done</h3>
+      <p style="margin-bottom: 24px;">A project is finished when someone other than you can understand and use it. Concretely:</p>
+      <ul class="checklist" id="done-list"></ul>
+    </div>
+
+    <div class="restart">
+      <button class="primary" onclick="restart()">Choose a different project</button>
+      <button onclick="window.print()">Save / print this brief</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============ DATA ============
+const DATA = {
+  'applied-math': {
+    title: 'Applied Mathematics',
+    desc: 'Modeling, optimization, and the math behind real-world systems.',
+    subareas: {
+      'quant-finance': {
+        title: 'Quantitative Finance',
+        desc: 'Pricing, risk, and stochastic models for markets.',
+        papers: [
+          { title: 'The Pricing of Options and Corporate Liabilities', authors: 'Black, F. & Scholes, M. (1973)', venue: 'J. Political Economy', url: 'https://www.cs.princeton.edu/courses/archive/fall09/cos323/papers/black_scholes73.pdf' },
+          { title: 'Portfolio Selection', authors: 'Markowitz, H. (1952)', venue: 'Journal of Finance', url: 'https://www.math.hkust.edu.hk/~maykwok/courses/ma362/07F/markowitz_JF.pdf' },
+          { title: 'A Closed-Form Solution for Options with Stochastic Volatility', authors: 'Heston, S. (1993)', venue: 'Review of Financial Studies', url: 'https://www.ma.imperial.ac.uk/~ajacquie/IC_AMDP/IC_AMDP_Docs/Literature/Heston.pdf' }
+        ]
+      },
+      'mathematical-modeling': {
+        title: 'Mathematical Modeling',
+        desc: 'Differential equations describing biology, physics, and society.',
+        papers: [
+          { title: 'A Contribution to the Mathematical Theory of Epidemics', authors: 'Kermack, W.O. & McKendrick, A.G. (1927)', venue: 'Proc. Royal Society A', url: 'https://royalsocietypublishing.org/doi/10.1098/rspa.1927.0118' },
+          { title: 'The Chemical Basis of Morphogenesis', authors: 'Turing, A.M. (1952)', venue: 'Phil. Trans. Royal Society B', url: 'https://royalsocietypublishing.org/doi/10.1098/rstb.1952.0012' },
+          { title: 'Variations and Fluctuations of Populations Living Together', authors: 'Volterra, V. (1926)', venue: 'J. Conseil Int. Explor. Mer', url: 'https://academic.oup.com/icesjms/article-abstract/3/1/3/789435' }
+        ]
+      },
+      'optimization': {
+        title: 'Optimization Theory',
+        desc: 'Finding the best solution under constraints — convex, gradient, combinatorial.',
+        papers: [
+          { title: 'A Method for Solving the Convex Programming Problem with Convergence Rate O(1/k²)', authors: 'Nesterov, Y. (1983)', venue: 'Soviet Math. Dokl.', url: 'https://www.ime.unicamp.br/~chico/MT853/nesterov83.pdf' },
+          { title: 'A New Polynomial-Time Algorithm for Linear Programming', authors: 'Karmarkar, N. (1984)', venue: 'Combinatorica', url: 'https://link.springer.com/article/10.1007/BF02579150' },
+          { title: 'Distributed Optimization and Statistical Learning via ADMM', authors: 'Boyd, S. et al. (2011)', venue: 'Foundations and Trends in ML', url: 'https://web.stanford.edu/~boyd/papers/pdf/admm_distr_stats.pdf' }
+        ]
+      },
+      'cryptography': {
+        title: 'Cryptography',
+        desc: 'Mathematical foundations of secrecy, signatures, and zero-knowledge proofs.',
+        papers: [
+          { title: 'A Method for Obtaining Digital Signatures and Public-Key Cryptosystems', authors: 'Rivest, R., Shamir, A. & Adleman, L. (1978)', venue: 'Comm. ACM', url: 'https://people.csail.mit.edu/rivest/Rsapaper.pdf' },
+          { title: 'New Directions in Cryptography', authors: 'Diffie, W. & Hellman, M. (1976)', venue: 'IEEE Trans. Info. Theory', url: 'https://ee.stanford.edu/~hellman/publications/24.pdf' },
+          { title: 'Polynomial-Time Algorithms for Prime Factorization and Discrete Logarithms on a Quantum Computer', authors: 'Shor, P. (1997)', venue: 'SIAM J. Computing', url: 'https://arxiv.org/abs/quant-ph/9508027' }
+        ]
+      },
+      'numerical-methods': {
+        title: 'Numerical Methods',
+        desc: 'Algorithms for computing answers when closed-form math fails you.',
+        papers: [
+          { title: 'An Algorithm for the Machine Calculation of Complex Fourier Series', authors: 'Cooley, J. & Tukey, J. (1965)', venue: 'Math. Computation', url: 'https://www.ams.org/journals/mcom/1965-19-090/S0025-5718-1965-0178586-1/S0025-5718-1965-0178586-1.pdf' },
+          { title: 'Methods of Conjugate Gradients for Solving Linear Systems', authors: 'Hestenes, M. & Stiefel, E. (1952)', venue: 'J. Research NBS', url: 'https://nvlpubs.nist.gov/nistpubs/jres/049/jresv49n6p409_a1b.pdf' },
+          { title: 'Über die numerische Auflösung von Differentialgleichungen', authors: 'Runge, C. (1895)', venue: 'Math. Annalen', url: 'https://link.springer.com/article/10.1007/BF01446807' }
+        ]
+      }
+    }
+  },
+  'data-science': {
+    title: 'Data Science',
+    desc: 'Learning from data — statistical, predictive, and interpretive.',
+    subareas: {
+      'machine-learning': {
+        title: 'Machine Learning Models',
+        desc: 'Supervised, unsupervised, and the deep learning revolution.',
+        papers: [
+          { title: 'Attention Is All You Need', authors: 'Vaswani, A. et al. (2017)', venue: 'NeurIPS', url: 'https://arxiv.org/abs/1706.03762' },
+          { title: 'Deep Residual Learning for Image Recognition', authors: 'He, K. et al. (2015)', venue: 'CVPR', url: 'https://arxiv.org/abs/1512.03385' },
+          { title: 'Random Forests', authors: 'Breiman, L. (2001)', venue: 'Machine Learning', url: 'https://link.springer.com/article/10.1023/A:1010933404324' }
+        ]
+      },
+      'nlp': {
+        title: 'Natural Language Processing',
+        desc: 'Teaching machines to read, write, and translate human language.',
+        papers: [
+          { title: 'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding', authors: 'Devlin, J. et al. (2018)', venue: 'NAACL', url: 'https://arxiv.org/abs/1810.04805' },
+          { title: 'Efficient Estimation of Word Representations in Vector Space (word2vec)', authors: 'Mikolov, T. et al. (2013)', venue: 'ICLR Workshop', url: 'https://arxiv.org/abs/1301.3781' },
+          { title: 'Language Models are Few-Shot Learners (GPT-3)', authors: 'Brown, T. et al. (2020)', venue: 'NeurIPS', url: 'https://arxiv.org/abs/2005.14165' }
+        ]
+      },
+      'computer-vision': {
+        title: 'Computer Vision',
+        desc: 'Making images legible to machines — classification, detection, generation.',
+        papers: [
+          { title: 'ImageNet Classification with Deep Convolutional Neural Networks (AlexNet)', authors: 'Krizhevsky, A. et al. (2012)', venue: 'NeurIPS', url: 'https://proceedings.neurips.cc/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html' },
+          { title: 'An Image is Worth 16x16 Words: Transformers for Image Recognition (ViT)', authors: 'Dosovitskiy, A. et al. (2020)', venue: 'ICLR', url: 'https://arxiv.org/abs/2010.11929' },
+          { title: 'Generative Adversarial Networks', authors: 'Goodfellow, I. et al. (2014)', venue: 'NeurIPS', url: 'https://arxiv.org/abs/1406.2661' }
+        ]
+      },
+      'time-series': {
+        title: 'Time Series Analysis',
+        desc: 'Forecasting and structure in sequential data — finance, weather, signals.',
+        papers: [
+          { title: 'Long Short-Term Memory', authors: 'Hochreiter, S. & Schmidhuber, J. (1997)', venue: 'Neural Computation', url: 'https://www.bioinf.jku.at/publications/older/2604.pdf' },
+          { title: 'Forecasting at Scale (Prophet)', authors: 'Taylor, S. & Letham, B. (2017)', venue: 'The American Statistician', url: 'https://peerj.com/preprints/3190/' },
+          { title: 'N-BEATS: Neural Basis Expansion Analysis for Interpretable Time Series Forecasting', authors: 'Oreshkin, B. et al. (2019)', venue: 'ICLR', url: 'https://arxiv.org/abs/1905.10437' }
+        ]
+      },
+      'recommender-systems': {
+        title: 'Recommender Systems',
+        desc: 'Personalization at scale — collaborative filtering, embeddings, ranking.',
+        papers: [
+          { title: 'Matrix Factorization Techniques for Recommender Systems', authors: 'Koren, Y., Bell, R. & Volinsky, C. (2009)', venue: 'IEEE Computer', url: 'https://datajobs.com/data-science-repo/Recommender-Systems-[Netflix].pdf' },
+          { title: 'Deep Neural Networks for YouTube Recommendations', authors: 'Covington, P. et al. (2016)', venue: 'RecSys', url: 'https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/45530.pdf' },
+          { title: 'Item-Based Collaborative Filtering Recommendation Algorithms', authors: 'Sarwar, B. et al. (2001)', venue: 'WWW', url: 'http://files.grouplens.org/papers/www10_sarwar.pdf' }
+        ]
+      }
+    }
+  },
+  'computer-science': {
+    title: 'Computer Science',
+    desc: 'Systems, languages, and algorithms — the substrate of everything else.',
+    subareas: {
+      'distributed-systems': {
+        title: 'Distributed Systems',
+        desc: 'Building software across many unreliable machines.',
+        papers: [
+          { title: 'MapReduce: Simplified Data Processing on Large Clusters', authors: 'Dean, J. & Ghemawat, S. (2004)', venue: 'OSDI', url: 'https://static.googleusercontent.com/media/research.google.com/en//archive/mapreduce-osdi04.pdf' },
+          { title: 'In Search of an Understandable Consensus Algorithm (Raft)', authors: 'Ongaro, D. & Ousterhout, J. (2014)', venue: 'USENIX ATC', url: 'https://raft.github.io/raft.pdf' },
+          { title: 'Dynamo: Amazon\'s Highly Available Key-value Store', authors: 'DeCandia, G. et al. (2007)', venue: 'SOSP', url: 'https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf' }
+        ]
+      },
+      'compilers': {
+        title: 'Compilers & Programming Languages',
+        desc: 'How code becomes machines — parsing, optimization, type systems.',
+        papers: [
+          { title: 'LLVM: A Compilation Framework for Lifelong Program Analysis & Transformation', authors: 'Lattner, C. & Adve, V. (2004)', venue: 'CGO', url: 'https://llvm.org/pubs/2004-01-30-CGO-LLVM.pdf' },
+          { title: 'A Theory of Type Polymorphism in Programming (Hindley-Milner)', authors: 'Milner, R. (1978)', venue: 'JCSS', url: 'https://homepages.inf.ed.ac.uk/wadler/papers/papers-we-love/milner-type-polymorphism.pdf' },
+          { title: 'Efficiently Computing Static Single Assignment Form', authors: 'Cytron, R. et al. (1991)', venue: 'ACM TOPLAS', url: 'https://www.cs.utexas.edu/~pingali/CS380C/2010/papers/ssaCytron.pdf' }
+        ]
+      },
+      'operating-systems': {
+        title: 'Operating Systems',
+        desc: 'The software that makes hardware usable — processes, memory, files.',
+        papers: [
+          { title: 'The UNIX Time-Sharing System', authors: 'Ritchie, D. & Thompson, K. (1974)', venue: 'Comm. ACM', url: 'https://dsf.berkeley.edu/cs262/unix.pdf' },
+          { title: 'Exokernel: An Operating System Architecture for Application-Level Resource Management', authors: 'Engler, D., Kaashoek, M. & O\'Toole, J. (1995)', venue: 'SOSP', url: 'https://pdos.csail.mit.edu/6.828/2008/readings/engler95exokernel.pdf' },
+          { title: 'The Linux Edge', authors: 'Torvalds, L. (1999)', venue: 'Open Sources', url: 'https://www.oreilly.com/openbook/opensources/book/linus.html' }
+        ]
+      },
+      'algorithms': {
+        title: 'Algorithms & Data Structures',
+        desc: 'The fundamental procedures and structures all software is built on.',
+        papers: [
+          { title: 'A Note on Two Problems in Connexion with Graphs', authors: 'Dijkstra, E.W. (1959)', venue: 'Numerische Math.', url: 'https://www-m3.ma.tum.de/foswiki/pub/MN0506/WebHome/dijkstra.pdf' },
+          { title: 'PRIMES is in P', authors: 'Agrawal, M., Kayal, N. & Saxena, N. (2004)', venue: 'Annals of Math.', url: 'https://www.cse.iitk.ac.in/users/manindra/algebra/primality_v6.pdf' },
+          { title: 'Fast Pattern Matching in Strings (KMP)', authors: 'Knuth, D., Morris, J. & Pratt, V. (1977)', venue: 'SIAM J. Computing', url: 'https://epubs.siam.org/doi/10.1137/0206024' }
+        ]
+      },
+      'databases': {
+        title: 'Databases',
+        desc: 'Storing, querying, and reasoning about data at scale.',
+        papers: [
+          { title: 'A Relational Model of Data for Large Shared Data Banks', authors: 'Codd, E.F. (1970)', venue: 'Comm. ACM', url: 'https://www.seas.upenn.edu/~zives/03f/cis550/codd.pdf' },
+          { title: 'Bigtable: A Distributed Storage System for Structured Data', authors: 'Chang, F. et al. (2006)', venue: 'OSDI', url: 'https://static.googleusercontent.com/media/research.google.com/en//archive/bigtable-osdi06.pdf' },
+          { title: 'The Log-Structured Merge-Tree (LSM-Tree)', authors: 'O\'Neil, P. et al. (1996)', venue: 'Acta Informatica', url: 'https://www.cs.umb.edu/~poneil/lsmtree.pdf' }
+        ]
+      }
+    }
+  },
+  'biology': {
+    title: 'Biology',
+    desc: 'Living systems — from molecules to ecosystems, increasingly computational.',
+    subareas: {
+      'computational-biology': {
+        title: 'Computational Biology',
+        desc: 'Modeling biological systems with code, math, and simulation.',
+        papers: [
+          { title: 'Highly Accurate Protein Structure Prediction with AlphaFold', authors: 'Jumper, J. et al. (2021)', venue: 'Nature', url: 'https://www.nature.com/articles/s41586-021-03819-2' },
+          { title: 'Basic Local Alignment Search Tool (BLAST)', authors: 'Altschul, S. et al. (1990)', venue: 'J. Molecular Biology', url: 'https://www.sciencedirect.com/science/article/pii/S0022283605803602' },
+          { title: 'Identification of Common Molecular Subsequences', authors: 'Smith, T. & Waterman, M. (1981)', venue: 'J. Molecular Biology', url: 'https://www.cs.utexas.edu/users/mount/papers/Smith_Waterman_1981.pdf' }
+        ]
+      },
+      'genetics': {
+        title: 'Genetics & Genome Editing',
+        desc: 'Inheritance, gene expression, and tools like CRISPR.',
+        papers: [
+          { title: 'Molecular Structure of Nucleic Acids: A Structure for Deoxyribose Nucleic Acid', authors: 'Watson, J. & Crick, F. (1953)', venue: 'Nature', url: 'https://www.nature.com/articles/171737a0' },
+          { title: 'A Programmable Dual-RNA–Guided DNA Endonuclease in Adaptive Bacterial Immunity (CRISPR-Cas9)', authors: 'Jinek, M., Charpentier, E., Doudna, J. et al. (2012)', venue: 'Science', url: 'https://www.science.org/doi/10.1126/science.1225829' },
+          { title: 'Initial Sequencing and Analysis of the Human Genome', authors: 'Lander, E.S. et al. (2001)', venue: 'Nature', url: 'https://www.nature.com/articles/35057062' }
+        ]
+      },
+      'neuroscience': {
+        title: 'Computational Neuroscience',
+        desc: 'How nervous systems compute — from single neurons to whole brains.',
+        papers: [
+          { title: 'A Quantitative Description of Membrane Current and its Application to Conduction and Excitation in Nerve', authors: 'Hodgkin, A. & Huxley, A. (1952)', venue: 'J. Physiology', url: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1392413/' },
+          { title: 'Receptive Fields, Binocular Interaction and Functional Architecture in the Cat\'s Visual Cortex', authors: 'Hubel, D. & Wiesel, T. (1962)', venue: 'J. Physiology', url: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1359523/' },
+          { title: 'The Free-Energy Principle: A Unified Brain Theory?', authors: 'Friston, K. (2010)', venue: 'Nature Reviews Neuroscience', url: 'https://www.nature.com/articles/nrn2787' }
+        ]
+      },
+      'ecology': {
+        title: 'Ecology & Population Dynamics',
+        desc: 'Mathematical models of species, communities, and ecosystems.',
+        papers: [
+          { title: 'An Equilibrium Theory of Insular Zoogeography', authors: 'MacArthur, R. & Wilson, E.O. (1963)', venue: 'Evolution', url: 'https://www.jstor.org/stable/2407089' },
+          { title: 'Will a Large Complex System be Stable?', authors: 'May, R.M. (1972)', venue: 'Nature', url: 'https://www.nature.com/articles/238413a0' },
+          { title: 'Biodiversity and Ecosystem Functioning: Current Knowledge and Future Challenges', authors: 'Loreau, M. et al. (2001)', venue: 'Science', url: 'https://www.science.org/doi/10.1126/science.1064088' }
+        ]
+      },
+      'bioinformatics': {
+        title: 'Bioinformatics',
+        desc: 'Data pipelines and statistics for sequencing, omics, and biological databases.',
+        papers: [
+          { title: 'A General Method Applicable to the Search for Similarities in the Amino Acid Sequence of Two Proteins (Needleman-Wunsch)', authors: 'Needleman, S. & Wunsch, C. (1970)', venue: 'J. Molecular Biology', url: 'https://www.sciencedirect.com/science/article/abs/pii/0022283670900574' },
+          { title: 'Fast and Accurate Short Read Alignment with Burrows–Wheeler Transform (BWA)', authors: 'Li, H. & Durbin, R. (2009)', venue: 'Bioinformatics', url: 'https://academic.oup.com/bioinformatics/article/25/14/1754/225615' },
+          { title: 'Biological Sequence Analysis: Probabilistic Models of Proteins and Nucleic Acids', authors: 'Durbin, R., Eddy, S., Krogh, A. & Mitchison, G. (1998)', venue: 'Cambridge Univ. Press (book)', url: 'https://www.cambridge.org/core/books/biological-sequence-analysis/921BB7B78B745198829EF96B7B53DBA7' }
+        ]
+      }
+    }
+  },
+  'engineering': {
+    title: 'Engineering',
+    desc: 'Designing and building physical systems — mechanical, electrical, control.',
+    subareas: {
+      'robotics': {
+        title: 'Robotics',
+        desc: 'Perception, planning, and control in physical machines.',
+        papers: [
+          { title: 'Probabilistic Robotics', authors: 'Thrun, S., Burgard, W. & Fox, D. (2005)', venue: 'MIT Press (book)', url: 'https://mitpress.mit.edu/9780262201629/probabilistic-robotics/' },
+          { title: 'End-to-End Training of Deep Visuomotor Policies', authors: 'Levine, S. et al. (2016)', venue: 'JMLR', url: 'https://arxiv.org/abs/1504.00702' },
+          { title: 'Past, Present, and Future of Simultaneous Localization and Mapping (SLAM)', authors: 'Cadena, C. et al. (2016)', venue: 'IEEE Trans. Robotics', url: 'https://arxiv.org/abs/1606.05830' }
+        ]
+      },
+      'embedded-systems': {
+        title: 'Embedded Systems',
+        desc: 'Software running directly on microcontrollers and constrained hardware.',
+        papers: [
+          { title: 'Scheduling Algorithms for Multiprogramming in a Hard-Real-Time Environment', authors: 'Liu, C.L. & Layland, J.W. (1973)', venue: 'JACM', url: 'https://dl.acm.org/doi/10.1145/321738.321743' },
+          { title: 'TinyOS: An Operating System for Sensor Networks', authors: 'Levis, P. et al. (2005)', venue: 'Ambient Intelligence', url: 'https://www.tinyos.net/papers/tos.pdf' },
+          { title: 'The Rate Monotonic Analysis Approach to Real-Time System Design', authors: 'Sha, L. & Goodenough, J. (1990)', venue: 'IEEE Computer', url: 'https://ieeexplore.ieee.org/document/52214' }
+        ]
+      },
+      'control-systems': {
+        title: 'Control Systems',
+        desc: 'Feedback, stability, and steering systems toward desired behavior.',
+        papers: [
+          { title: 'A New Approach to Linear Filtering and Prediction Problems', authors: 'Kalman, R.E. (1960)', venue: 'J. Basic Engineering', url: 'https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf' },
+          { title: 'Constrained Model Predictive Control: Stability and Optimality', authors: 'Mayne, D.Q. et al. (2000)', venue: 'Automatica', url: 'https://www.sciencedirect.com/science/article/abs/pii/S0005109899002149' },
+          { title: 'PID Control: From Algorithm to Code', authors: 'Åström, K. & Hägglund, T. (2006)', venue: 'ISA (book chapter)', url: 'https://www.cds.caltech.edu/~murray/courses/cds101/fa02/caltech/astrom-ch6.pdf' }
+        ]
+      },
+      'aerospace-cfd': {
+        title: 'Aerospace & Fluid Dynamics',
+        desc: 'Flight, propulsion, and the math of fluids in motion.',
+        papers: [
+          { title: 'Numerical Heat Transfer and Fluid Flow (SIMPLE algorithm)', authors: 'Patankar, S.V. (1980)', venue: 'Hemisphere Publishing (book)', url: 'https://www.taylorfrancis.com/books/mono/10.1201/9781482234213/numerical-heat-transfer-fluid-flow-suhas-patankar' },
+          { title: 'A One-Equation Turbulence Model for Aerodynamic Flows', authors: 'Spalart, P. & Allmaras, S. (1992)', venue: 'AIAA Paper', url: 'https://arc.aiaa.org/doi/10.2514/6.1992-439' },
+          { title: 'Aerodynamics of Wings and Bodies', authors: 'Ashley, H. & Landahl, M. (1965)', venue: 'Addison-Wesley (book)', url: 'https://store.doverpublications.com/0486648990.html' }
+        ]
+      },
+      'materials-science': {
+        title: 'Materials Science',
+        desc: 'Designing materials from atomic structure to bulk properties.',
+        papers: [
+          { title: 'The Phenomena of Rupture and Flow in Solids', authors: 'Griffith, A.A. (1921)', venue: 'Phil. Trans. Royal Society A', url: 'https://royalsocietypublishing.org/doi/10.1098/rsta.1921.0006' },
+          { title: 'Inhomogeneous Electron Gas (Density Functional Theory)', authors: 'Hohenberg, P. & Kohn, W. (1964)', venue: 'Physical Review', url: 'https://journals.aps.org/pr/abstract/10.1103/PhysRev.136.B864' },
+          { title: 'The Materials Project: A Materials Genome Approach to Accelerating Materials Innovation', authors: 'Jain, A. et al. (2013)', venue: 'APL Materials', url: 'https://pubs.aip.org/aip/apm/article/1/1/011002/119685' }
+        ]
+      }
+    }
+  }
+};
+
+// ============ STATE ============
+const state = {
+  step: 0,
+  currentScreen: '0',
+  topic: null,
+  subarea: null,
+  difficulty: null,
+  papers: null,
+  // Custom (Build Your Own) path
+  custom: false,
+  customField: null,
+  customFieldWhy: null,
+  customSubarea: null,
+  customSubareaDesc: null,
+};
+
+const TOPIC_KEYS = Object.keys(DATA);
+
+// ============ NAVIGATION ============
+// Screens are addressed by string IDs. Numeric IDs ('0'-'5') are the main flow.
+// '1c' and '2c' are the Build-Your-Own custom-input screens.
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + id);
+  if (!el) return;
+  el.classList.add('active');
+  state.currentScreen = id;
+  // Map to step number for the top progress indicator
+  const stepMap = { '0':0, '1':1, '2':2, '3':3, '4':4, '5':5, '1c':1, '2c':2 };
+  state.step = stepMap[id] ?? 0;
+  updateProgress();
+  updateBreadcrumbs();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Kept for backwards-compat — callers like next() and the hero button used numbers
+function showStep(n) { showScreen(String(n)); }
+
+function next() {
+  // Advance based on current screen + path
+  const s = state.currentScreen;
+  if (s === '0') showScreen('1');
+  else if (s === '1') showScreen('2'); // standard topic-selected path; selectTopic also calls next
+  else if (s === '1c') showScreen('2c');
+  else if (s === '2') showScreen('3');
+  else if (s === '2c') showScreen('3');
+  else if (s === '3') showScreen('4');
+  else if (s === '4') showScreen('5');
+}
+
+function back() {
+  const s = state.currentScreen;
+  if (s === '1') { showScreen('0'); }
+  else if (s === '2') {
+    state.subarea = null;
+    showScreen('1');
+    renderTopics();
+  }
+  else if (s === '1c') {
+    // leaving custom path entirely
+    state.custom = false;
+    state.customField = null;
+    state.customFieldWhy = null;
+    showScreen('1');
+    renderTopics();
+  }
+  else if (s === '2c') {
+    state.customSubarea = null;
+    state.customSubareaDesc = null;
+    showScreen('1c');
+  }
+  else if (s === '3') {
+    state.difficulty = null;
+    if (state.custom) showScreen('2c');
+    else showScreen('2');
+  }
+  else if (s === '4') {
+    state.papers = null;
+    showScreen('3');
+  }
+  else if (s === '5') {
+    state.papers = null;
+    showScreen('4');
+  }
+}
+
+function restart() {
+  state.topic = null;
+  state.subarea = null;
+  state.difficulty = null;
+  state.papers = null;
+  state.custom = false;
+  state.customField = null;
+  state.customFieldWhy = null;
+  state.customSubarea = null;
+  state.customSubareaDesc = null;
+  // clear inputs
+  const f = document.getElementById('custom-field-input'); if (f) f.value = '';
+  const fw = document.getElementById('custom-field-why'); if (fw) fw.value = '';
+  const sa = document.getElementById('custom-subarea-input'); if (sa) sa.value = '';
+  const sad = document.getElementById('custom-subarea-desc'); if (sad) sad.value = '';
+  showScreen('0');
+}
+
+function updateProgress() {
+  document.querySelectorAll('.progress-step').forEach(el => {
+    const s = parseInt(el.dataset.step);
+    el.classList.remove('active', 'completed');
+    if (s === state.step) el.classList.add('active');
+    else if (s < state.step) el.classList.add('completed');
+  });
+}
+
+function updateBreadcrumbs() {
+  const parts = [];
+  if (state.custom) {
+    if (state.customField) parts.push(state.customField);
+    if (state.customSubarea) parts.push(state.customSubarea);
+  } else {
+    if (state.topic) parts.push(DATA[state.topic].title);
+    if (state.subarea) parts.push(DATA[state.topic].subareas[state.subarea].title);
+  }
+  if (state.difficulty) parts.push(state.difficulty.charAt(0).toUpperCase() + state.difficulty.slice(1));
+
+  const html = parts.map((p, i) => `<span>${escapeHtml(p)}</span>${i < parts.length - 1 ? '<span class="sep">/</span>' : ''}`).join('');
+  ['bc-2', 'bc-2c', 'bc-3', 'bc-4'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ============ BUILD-YOUR-OWN HANDLERS ============
+function startCustom() {
+  state.custom = true;
+  state.topic = null;
+  state.subarea = null;
+  showScreen('1c');
+  setTimeout(() => {
+    const i = document.getElementById('custom-field-input');
+    if (i) i.focus();
+  }, 250);
+}
+
+function validateCustomField() {
+  const input = document.getElementById('custom-field-input');
+  const btn = document.getElementById('custom-field-continue');
+  const err = document.getElementById('field-error');
+  const v = input.value.trim();
+  if (v.length === 0) {
+    btn.disabled = true; err.textContent = '';
+  } else if (v.length < 3) {
+    btn.disabled = true; err.textContent = 'A bit more — a field name is usually 2+ words or 5+ characters.';
+  } else {
+    btn.disabled = false; err.textContent = '';
+  }
+}
+
+function submitCustomField() {
+  const input = document.getElementById('custom-field-input');
+  const why = document.getElementById('custom-field-why');
+  const v = input.value.trim();
+  if (v.length < 3) return;
+  state.customField = v;
+  state.customFieldWhy = why.value.trim() || null;
+  // Update sub-area screen copy with their field name
+  document.getElementById('custom-subarea-sub').textContent =
+    `Inside ${v}, find one specific corner. A whole field is a career; a sub-area is a project.`;
+  showScreen('2c');
+  setTimeout(() => {
+    const i = document.getElementById('custom-subarea-input');
+    if (i) i.focus();
+  }, 250);
+}
+
+function validateCustomSubarea() {
+  const input = document.getElementById('custom-subarea-input');
+  const btn = document.getElementById('custom-subarea-continue');
+  const err = document.getElementById('subarea-error');
+  const v = input.value.trim();
+  if (v.length === 0) {
+    btn.disabled = true; err.textContent = '';
+  } else if (v.length < 3) {
+    btn.disabled = true; err.textContent = 'A bit more — sub-area names are usually short phrases, not single letters.';
+  } else {
+    btn.disabled = false; err.textContent = '';
+  }
+}
+
+function submitCustomSubarea() {
+  const input = document.getElementById('custom-subarea-input');
+  const desc = document.getElementById('custom-subarea-desc');
+  const v = input.value.trim();
+  if (v.length < 3) return;
+  state.customSubarea = v;
+  state.customSubareaDesc = desc.value.trim() || null;
+  showScreen('3');
+}
+
+// Keyboard: Enter in input fields submits when valid
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const active = document.activeElement;
+  if (!active) return;
+  if (active.id === 'custom-field-input') {
+    e.preventDefault();
+    const btn = document.getElementById('custom-field-continue');
+    if (!btn.disabled) submitCustomField();
+  } else if (active.id === 'custom-subarea-input') {
+    e.preventDefault();
+    const btn = document.getElementById('custom-subarea-continue');
+    if (!btn.disabled) submitCustomSubarea();
+  }
+});
+
+// ============ RENDERING ============
+function renderTopics() {
+  const grid = document.getElementById('topic-options');
+  grid.innerHTML = TOPIC_KEYS.map((key, i) => {
+    const d = DATA[key];
+    const num = String(i + 1).padStart(2, '0');
+    return `
+      <button class="option" onclick="selectTopic('${key}')">
+        <div class="option-num">${num} / FIELD</div>
+        <div class="option-title">${d.title}</div>
+        <div class="option-desc">${d.desc}</div>
+      </button>`;
+  }).join('');
+}
+
+function selectTopic(key) {
+  state.custom = false;
+  state.topic = key;
+  renderSubareas();
+  showScreen('2');
+}
+
+function renderSubareas() {
+  const grid = document.getElementById('subarea-options');
+  if (!state.topic) return;
+  const subareas = DATA[state.topic].subareas;
+  const keys = Object.keys(subareas);
+  document.getElementById('subarea-sub').textContent = `Within ${DATA[state.topic].title.toLowerCase()}, where does your attention want to live?`;
+  grid.innerHTML = keys.map((key, i) => {
+    const s = subareas[key];
+    const num = String(i + 1).padStart(2, '0');
+    return `
+      <button class="option" onclick="selectSubarea('${key}')">
+        <div class="option-num">${num} / FOCUS</div>
+        <div class="option-title">${s.title}</div>
+        <div class="option-desc">${s.desc}</div>
+      </button>`;
+  }).join('');
+}
+
+function selectSubarea(key) {
+  state.subarea = key;
+  showScreen('3');
+}
+
+function selectDifficulty(level) {
+  state.difficulty = level;
+  showScreen('4');
+}
+
+function selectPapers(yes) {
+  state.papers = yes;
+  buildSummary();
+  showScreen('5');
+}
+
+// ============ SUMMARY BUILDER ============
+function difficultyProfile(level) {
+  return {
+    easy: {
+      duration: '1–2 weeks',
+      scope: 'a focused, well-defined slice',
+      depth: 'follow established patterns; cite a single source for each technique you use',
+      ambition: 'reproduce something that already works, then add one small twist of your own'
+    },
+    medium: {
+      duration: '3–6 weeks',
+      scope: 'a real design with non-obvious choices',
+      depth: 'compare 2–3 approaches, justify your selection in writing',
+      ambition: 'build something that solves a specific problem you actually have, or that someone you know has'
+    },
+    hard: {
+      duration: '2–4+ months',
+      scope: 'a novel contribution or a deeply-engineered system',
+      depth: 'rigorous evaluation, benchmarks, ablations, and honest discussion of failure modes',
+      ambition: 'aim for something publishable as a write-up, demo, or open-source release'
+    }
+  }[level];
+}
+
+function startSteps(topic, subarea, level, isCustom) {
+  // Pull the natural-language field/sub-area names out so the steps read well
+  // for both the curated and Build-Your-Own paths.
+  const fieldName = isCustom ? state.customField : DATA[topic].title;
+  const subName = isCustom ? state.customSubarea : DATA[topic].subareas[subarea].title;
+  const subLower = subName.toLowerCase();
+  const prof = difficultyProfile(level);
+
+  const common = [
+    {
+      name: 'Define the problem in one sentence',
+      text: `Write down: "I'm going to build X that does Y for Z." If you can't fill in those blanks for a ${subLower} project, you don't have a project yet — you have a vague interest. Spend a day on this before any code.`
+    },
+    {
+      name: 'Set the boundary',
+      text: `Plan for ${prof.duration}. List three features you will build and at least two you will refuse to build. Scope discipline is the difference between a finished project and an abandoned one.`
+    },
+    {
+      name: 'Audit the prior art',
+      text: `Spend 2–3 hours searching for existing projects, tutorials, and open-source repos in ${subLower}. Your job isn't to invent from scratch — it's to figure out what's been done and where you can add something specific.`
+    }
+  ];
+
+  // ===== Medium and Hard get extra information-gathering steps =====
+  const mediumInfoSteps = [
+    {
+      name: 'Build a YouTube curriculum',
+      text: `Search YouTube for "${subName} tutorial", "${subName} lecture", and "${subName} explained". Look for university lectures (can also check MIT OpenCourseWare, Stanford Online), conference talks, and creators with a clear track record in ${fieldName.toLowerCase()}. A good signal for when I'm trying to find relevant YouTube videos is when the video is of a professor teaching the subject on a whiteboard. I tend to find that obscure videos where the professor obviously cares about their students learning the material (not just delivering a presentation) like this are often the most insightful (e.g. Jeff Anderson Math for Linear Algebra concepts). Queue 3–5 videos that span fundamentals to recent work. Watch on 1.5x; take notes only on what's directly useful to your project.`
+    },
+    {
+      name: 'Pick one optional textbook or chapter',
+      text: `A medium project doesn't require reading a whole textbook, but having one nearby as a reference pays off. Search "${subLower} textbook" and check what's used in university courses on the topic. Keep in mind that a lot of great material is not necessarily used in massive quantities, but a good sign is depth of coverage and the notion that the author genuinely cares about their writing. Read the chapter that maps to your specific project — skim the rest. Library copies, PDFs, or Internet Archive work fine; don't let cost block you.`
+    }
+  ];
+
+  const hardInfoSteps = [
+    {
+      name: 'Build a YouTube curriculum',
+      text: `Search YouTube for "${subName} tutorial", "${subName} lecture", and "${subName} research talk". Prioritize university lectures (MIT OCW, Stanford Online, Berkeley), keynote talks from major conferences, and channels run by working researchers. A good signal for when I'm trying to find relevant YouTube videos is when the video is of a professor teaching the subject on a whiteboard. I tend to find that obscure videos where the professor obviously cares about their students learning the material (not just delivering a presentation) like this are often the most insightful (e.g. Jeff Anderson Math for Linear Algebra concepts). Queue 5–10 videos spanning fundamentals through recent results. This is your scaffolding — return to it whenever a paper or system feels opaque.`
+    },
+    {
+      name: 'Learn to search arXiv strategically',
+      text: `Go to <strong>arxiv.org</strong> and find the category that matches your work (e.g. <em>cs.LG</em> for ML, <em>math.OC</em> for optimization, <em>q-bio</em> for biology, <em>cond-mat</em> for materials, etc.). Use the arXiv search bar with terms like <em>"${subLower}" + your specific subtopic</em>, sort by date, and skim recent abstracts. Then use <strong>connectedpapers.com</strong> or <strong>semanticscholar.org</strong> to find papers connected to your favorites. Follow citations backward to find foundational work, and forward to find what's current. Save 10–20 candidate papers; you'll only read 5 of them properly.`
+    },
+    {
+      name: 'Pick 1–2 reference textbooks',
+      text: `Hard projects benefit from a solid reference text — not to read cover-to-cover, but to consult when the math or systems get hairy. Search "graduate textbook ${subLower}", check what's used in PhD-level courses, and read author reviews. Pick the one closest to your specific project and one broader survey. For ML/CS, also check <strong>survey papers</strong> on arXiv ("survey of ${subLower}") — they often replace a textbook entirely.`
+    }
+  ];
+
+  const buildSteps = [
+    {
+      name: 'Set up the smallest possible working version',
+      text: `Before adding any complexity, get end-to-end "hello world" running, even if it's trivial and ugly. A working pipeline you can improve beats a brilliant plan you never start.`
+    },
+    {
+      name: 'Pick your evaluation up front',
+      text: `Decide now how you'll measure whether the project succeeded. ${prof.depth}. Without a metric, "done" becomes "tired of working on it."`
+    },
+    {
+      name: 'Build in public, even quietly',
+      text: `Keep a one-paragraph weekly log in a README or a notebook. Future-you and anyone you eventually show this to will need it. ${level === 'hard' ? 'For a hard project, this log is the seed of your eventual write-up.' : ''}`
+    }
+  ];
+
+  // Custom path: add a discipline-discovery step at the very front
+  const customPrefix = isCustom ? [{
+    name: 'Lock in your field with a real reference',
+    text: `Before going further, validate that "${fieldName}" is a real, named field. Find one university department, one Wikipedia article, or one conference series that uses this name. Bookmark it. This becomes your anchor — whenever you're confused about whether something belongs in your project, you can check whether the field's own people would recognize it.`
+  }] : [];
+
+  if (level === 'easy') return [...customPrefix, ...common, ...buildSteps];
+  if (level === 'medium') return [...customPrefix, ...common, ...mediumInfoSteps, ...buildSteps];
+  return [...customPrefix, ...common, ...hardInfoSteps, ...buildSteps];
+}
+
+function doneCriteria(level) {
+  const base = [
+    'Someone unfamiliar with your project can read your README and understand what it does in under 2 minutes.',
+    'Your code runs cleanly from a fresh clone. No missing dependencies, no hardcoded paths to your laptop or env variables included in the code.',
+    'You can demo the working version in a short amount of time without apologizing or making excuses.',
+    'You have written down at least one thing you learned that you didn\'t know when you started.'
+  ];
+  const medium = [
+    'You have a results section: a metric, a chart, a comparison, or a worked example, not just code that runs.',
+    'You can articulate one specific design choice you made and why, without saying "it just felt right."'
+  ];
+  const hard = [
+    'Your evaluation includes at least one baseline you compared against, and you reported honest numbers including the ones that didn\'t look great.',
+    'You have a written discussion of limitations and what you\'d do with another month.',
+    'You\'ve shared the work: submitted, posted, presented, or open-sourced, basically anything outside of your own machine.'
+  ];
+  if (level === 'easy') return base;
+  if (level === 'medium') return [...base, ...medium];
+  return [...base, ...medium, ...hard];
+}
+
+function buildSummary() {
+  const isCustom = state.custom;
+  const topic = isCustom ? null : DATA[state.topic];
+  const sub = isCustom ? null : topic.subareas[state.subarea];
+  const fieldName = isCustom ? state.customField : topic.title;
+  const subName = isCustom ? state.customSubarea : sub.title;
+  const subDesc = isCustom ? (state.customSubareaDesc || null) : sub.desc;
+  const prof = difficultyProfile(state.difficulty);
+
+  // Title
+  document.getElementById('summary-title').textContent =
+    `A ${state.difficulty} ${subName.toLowerCase()} project, scoped for ${prof.duration}.`;
+  document.getElementById('summary-tagline').textContent =
+    `${fieldName} · ${subName}${isCustom ? ' · Build-your-own path' : ''}`;
+
+  // Tags
+  const tagsArr = [
+    `<span class="tag accent">${state.difficulty.toUpperCase()}</span>`,
+    `<span class="tag">${prof.duration}</span>`,
+    `<span class="tag">${escapeHtml(fieldName)}</span>`,
+    `<span class="tag">${escapeHtml(subName)}</span>`,
+    `<span class="tag">${state.papers ? 'With papers' : 'No papers'}</span>`
+  ];
+  if (isCustom) tagsArr.push(`<span class="tag">Custom path</span>`);
+  document.getElementById('summary-tags').innerHTML = tagsArr.join('');
+
+  // Overview
+  const customWhy = state.customFieldWhy ? ` You came to ${fieldName.toLowerCase()} because: ${state.customFieldWhy}` : '';
+  document.getElementById('overview-text').textContent =
+    `You're building a ${state.difficulty}-difficulty project in ${subName.toLowerCase()}, sitting inside the broader field of ${fieldName.toLowerCase()}. ` +
+    `The shape of the work is ${prof.scope}, with the ambition to ${prof.ambition}.${customWhy}`;
+  document.getElementById('overview-context').textContent =
+    (subDesc ? subDesc + ' ' : '') +
+    `A successful project here doesn't try to cover the whole sub-field — it picks one concrete question, builds one concrete artifact, and finishes.`;
+
+  // Start steps
+  const steps = startSteps(state.topic, state.subarea, state.difficulty, isCustom);
+  // Use innerHTML because some step texts include inline HTML (links, <strong>, <em>)
+  document.getElementById('start-steps').innerHTML = steps.map(s =>
+    `<li><div class="step-name">${s.name}</div><div class="step-text">${s.text}</div></li>`
+  ).join('');
+
+  // Papers — three modes: hidden (no), curated list (yes + standard), self-find guide (yes + custom)
+  const papersSection = document.getElementById('papers-section');
+  const papersHeading = document.getElementById('papers-heading');
+  const papersList = document.getElementById('paper-list');
+  const papersNote = document.getElementById('paper-list-note');
+  const findGuide = document.getElementById('find-papers-guide');
+  const tipsSection = document.getElementById('paper-tips-section');
+  const doneNum = document.getElementById('done-num');
+
+  if (state.papers && !isCustom) {
+    // Curated paper list
+    papersSection.style.display = 'block';
+    tipsSection.style.display = 'block';
+    doneNum.textContent = 'v.';
+    papersHeading.textContent = 'Foundational papers';
+    papersList.style.display = 'grid';
+    papersNote.style.display = 'block';
+    findGuide.style.display = 'none';
+    papersList.innerHTML = sub.papers.map((p, i) =>
+      `<a class="paper" href="${p.url}" target="_blank" rel="noopener">
+        <div class="paper-meta">Paper ${String(i + 1).padStart(2, '0')} · ${p.venue}</div>
+        <div class="paper-title">${p.title}</div>
+        <div class="paper-authors">${p.authors}</div>
+      </a>`
+    ).join('');
+  } else if (state.papers && isCustom) {
+    // Self-find paper guide for custom paths
+    papersSection.style.display = 'block';
+    tipsSection.style.display = 'block';
+    doneNum.textContent = 'v.';
+    papersHeading.textContent = 'Finding your own foundational papers';
+    papersList.style.display = 'none';
+    papersNote.style.display = 'none';
+    findGuide.style.display = 'block';
+    document.querySelectorAll('.js-subject').forEach(el => { el.textContent = subName; });
+    document.querySelectorAll('.js-subject-lower').forEach(el => { el.textContent = subName.toLowerCase(); });
+  } else {
+    papersSection.style.display = 'none';
+    tipsSection.style.display = 'none';
+    doneNum.textContent = 'iii.';
+  }
+
+  // Done criteria
+  const done = doneCriteria(state.difficulty);
+  document.getElementById('done-list').innerHTML = done.map(d => `<li>${d}</li>`).join('');
+}
+
+// ============ INIT ============
+renderTopics();
+updateProgress();
+
+// Hook the hero "Begin" into next-step
+// (already wired via onclick)
+</script>
+</body>
+</html>
