@@ -30,17 +30,17 @@ For students whose interests don't fit the five preset fields, the BYO path walk
 
 ```bash
 # Just open it in a browser.
-open project-compass-2.html
+open project-builder-2.html
 # Or serve locally if you prefer:
 python3 -m http.server 8000
-# Then visit http://localhost:8000/project-compass-2.html
+# Then visit http://localhost:8000/project-builder-2.html
 ```
 
 No build step. No `npm install`. Internet connection needed only for Google Fonts (Fraunces and JetBrains Mono).
 
 ## File structure
 
-Everything is in `project-compass-2.html`:
+Everything is in `project-builder-2.html`:
 
 - **CSS** — dark editorial theme using CSS custom properties. Background atmosphere via radial gradients and a subtle grid overlay. Animations are CSS-only.
 - **HTML** — eight screens total (start, topic, custom-field, sub-area, custom-sub-area, difficulty, papers, brief), shown/hidden by a single active class.
