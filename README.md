@@ -1,4 +1,4 @@
-# Project Compass
+# Project Builder
 
 A single-file, dark-themed decision-tree site that helps college students go from "I want to build something" to a finished, scoped project brief. Pick a field, narrow a focus, set a difficulty, optionally add research papers, and walk away with a tailored plan.
 
@@ -30,17 +30,17 @@ For students whose interests don't fit the five preset fields, the BYO path walk
 
 ```bash
 # Just open it in a browser.
-open project-compass.html
+open project-compass-2.html
 # Or serve locally if you prefer:
 python3 -m http.server 8000
-# Then visit http://localhost:8000/project-compass.html
+# Then visit http://localhost:8000/project-compass-2.html
 ```
 
 No build step. No `npm install`. Internet connection needed only for Google Fonts (Fraunces and JetBrains Mono).
 
 ## File structure
 
-Everything is in `project-compass.html`:
+Everything is in `project-compass-2.html`:
 
 - **CSS** — dark editorial theme using CSS custom properties. Background atmosphere via radial gradients and a subtle grid overlay. Animations are CSS-only.
 - **HTML** — eight screens total (start, topic, custom-field, sub-area, custom-sub-area, difficulty, papers, brief), shown/hidden by a single active class.
